@@ -1,4 +1,49 @@
+import hashlib
+
 from django.shortcuts import render
 
+from django.shortcuts import HttpResponseRedirect
+from Store.models import *
 
+def set_password(password):
+    md5 = hashlib.md5()
+    md5.update(password.encode())
+    result = md5.hexdigest()
+    return result
+
+def register(request):
+    if request.method == "POST":
+        username  = request.POST.get("username")
+        password = request.POST.get("password")
+        if username and password:
+            seller = Seller()
+            seller.username = username
+            seller.password = set_password(password)
+            seller.nickname = username
+            seller.save()
+            return HttpResponseRedirect("/Store/login")
+    return render(request,"store/register.html")
+def login(request):
+    """
+    登录功能，如果登录成功，跳转到首页
+    如果失败，跳转到登录页
+    """
+    response = render(request,"store/login.html")
+    response.set_cookie("login_from","login_page")
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        if username and password:
+            user = Seller.objects.filter(username=username).first()
+            if user:
+                web_password = set_password(password)
+                cookies = request.COOKIES.get("login_from")
+                if user.password == web_password and cookies == "login_page":
+                    response = HttpResponseRedirect("/Store/index")
+                    response.set_cookie("username",username)
+                    request.session["username"] = username
+                    return response
+    return render(request,"store/login.html")
+def index(request):
+    return render(request,"store/index.html")
 # Create your views here.
