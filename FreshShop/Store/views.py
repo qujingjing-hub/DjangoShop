@@ -5,6 +5,17 @@ from django.shortcuts import render
 from django.shortcuts import HttpResponseRedirect
 from Store.models import *
 
+def loginValid(fun):
+    def inner(request,*args,**kwargs):
+        c_user = request.COOKIES.get("username")
+        s_user = request.session.get("username")
+        if c_user and s_user and c_user == s_user:
+            user = Seller.objects.filter(username=c_user).first()
+            if user:
+                return fun(request,*args,**kwargs)
+        return HttpResponseRedirect("/Store/login/")
+    return inner
+
 def set_password(password):
     md5 = hashlib.md5()
     md5.update(password.encode())
@@ -12,6 +23,11 @@ def set_password(password):
     return result
 
 def register(request):
+    """
+        register注册
+        返回注册页面
+        进行注册数据保存
+    """
     if request.method == "POST":
         username  = request.POST.get("username")
         password = request.POST.get("password")
@@ -44,6 +60,8 @@ def login(request):
                     request.session["username"] = username
                     return response
     return render(request,"store/login.html")
+
+@loginValid
 def index(request):
     return render(request,"store/index.html")
 # Create your views here.
