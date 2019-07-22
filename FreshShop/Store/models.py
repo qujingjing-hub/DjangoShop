@@ -39,7 +39,7 @@ class Goods(models.Model):
 
     store_id = models.ManyToManyField(to=Store,verbose_name="商品店铺")
 
-class GoodsiImg(models.Model):
+class GoodsImg(models.Model):
 
     img_address = models.ImageField(upload_to="store/images", verbose_name="图片地址")
     img_description = models.TextField(max_length=32, verbose_name="图片描述")
