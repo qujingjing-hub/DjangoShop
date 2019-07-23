@@ -1,0 +1,15 @@
+{% extends "store/base.html" %}
+{% block title %}
+    商品详情页
+{% endblock %}
+{% block lable %}
+    <div>商品详情</div>
+{% endblock %}
+{% block content %}
+    <form>
+    {% for goods in page %}
+        <div>{{ goods.goods_name }}</div>
+        <div>{{ goods.goods_description }}</div>
+    {% endfor %}
+    </form>
+{% endblock %}
