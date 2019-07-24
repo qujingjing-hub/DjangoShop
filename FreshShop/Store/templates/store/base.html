@@ -27,6 +27,7 @@
   <div id="wrapper">
 
     <!-- Sidebar -->
+  {% if request.COOKIES.has_store %}
     <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
       <!-- Sidebar - Brand -->
@@ -42,15 +43,10 @@
 
       <!-- Nav Item - Dashboard -->
       <li class="nav-item">
-        {% if is_store %}
-        <a class="nav-link" href="index.html">
+        <a class="nav-link" href="/Store/list_goods">
           <i class="fas fa-fw fa-tachometer-alt"></i>
           <span>店铺管理</span></a>
-        {% else %}
-        <a class="nav-link" href="/Store/register_store/">
-          <i class="fas fa-fw fa-tachometer-alt"></i>
-          <span>无店铺，请注册</span></a>
-        {% endif %}
+
       </li>
       <!-- Divider -->
       <hr class="sidebar-divider">
@@ -71,11 +67,30 @@
             <h6 class="collapse-header">商品管理:</h6>
             <a class="collapse-item" href="/Store/add_goods">添加商品</a>
             <a class="collapse-item" href="/Store/list_goods">商品列表</a>
-            <a class="collapse-item" href="/Store/goods_des">商品详情</a>
           </div>
         </div>
       </li>
     </ul>
+   {% else %}
+    <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+     <!-- Sidebar - Brand -->
+      <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+        <div class="sidebar-brand-icon rotate-n-15">
+          <i class="fas fa-laugh-wink"></i>
+        </div>
+        <div class="sidebar-brand-text mx-3">小璩管理平台</div>
+      </a>
+
+      <!-- Divider -->
+      <hr class="sidebar-divider my-0">
+        <li class="nav-item">
+        <a class="nav-link" href="/Store/register_store/">
+          <i class="fas fa-fw fa-tachometer-alt"></i>
+          <span>无店铺，请注册</span>
+        </a>
+        </li>
+        </ul>
+    {% endif %}
     <!-- End of Sidebar -->
 
     <!-- Content Wrapper -->
@@ -309,15 +324,15 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
+          <h5 class="modal-title" id="exampleModalLabel">确定退出吗?</h5>
           <button class="close" type="button" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">×</span>
           </button>
         </div>
-        <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
+        <div class="modal-body">如果您准备结束当前会话，请选择下面的“注销”。</div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
-          <a class="btn btn-primary" href="login.html">Logout</a>
+          <button class="btn btn-secondary" type="button" data-dismiss="modal">取消</button>
+          <a class="btn btn-primary" href="/Store/logout">注销</a>
         </div>
       </div>
     </div>
