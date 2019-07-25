@@ -118,6 +118,52 @@ def register_store(request):
     return render(request,"store/register_store.html",locals())
 
 @loginValid
+def add_goods_type(request):
+   if request.method == "POST":
+       name = request.POST.get("name")
+       description = request.POST.get("description")
+       picture = request.FILES.get("picture")
+
+       goods_type = GoodsType()
+       goods_type.name = name
+       goods_type.description = description
+       goods_type.picture = picture
+       goods_type.save()
+
+       return HttpResponseRedirect("/Store/goods_type_list/")
+   return render(request,"store/add_goods_type.html")
+
+@loginValid
+def goods_type_list(request):
+    list_goods_type = GoodsType.objects.all()
+    if request.method == "POST":
+        name = request.POST.get("name")
+        description = request.POST.get("description")
+        picture = request.FILES.get("picture")
+
+        goods_type = GoodsType()
+        goods_type.name = name
+        goods_type.description = description
+        goods_type.picture = picture
+        goods_type.save()
+    page_num = request.GET.get("page_num", 1)  # 页码，默认为1
+    paginator = Paginator(list_goods_type, 3)
+    page = paginator.page(int(page_num))
+    page_range = paginator.page_range
+    return render(request,"store/goods_type_list.html",locals())
+
+def delete_goods_type(request):
+    id = int(request.GET.get("id"))
+    goods = GoodsType.objects.get(id=id)
+    goods.delete()
+    return HttpResponseRedirect("/Store/goods_type_list/")
+
+@loginValid
+def goods_type(request,goods_type_id):
+    goods_type_data = GoodsType.objects.filter(id=goods_type_id).first()
+    return render(request, "store/goods_type.html",locals())
+
+@loginValid
 def add_goods(request):
     """
     负责添加商品
@@ -151,6 +197,7 @@ def add_goods(request):
         goods.save()
         return HttpResponseRedirect("/Store/list_goods/")
     return render(request,"store/add_goods.html")
+
 
 @loginValid
 def list_goods(request,state):
