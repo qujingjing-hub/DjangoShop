@@ -72,11 +72,6 @@ def login(request):
                     return response
     return response
 
-def logout(request):
-    response = HttpResponseRedirect("/Store/login/")
-    response.delete_cookie("username")
-    return response
-
 @loginValid
 def index(request):
     """
@@ -158,25 +153,30 @@ def add_goods(request):
     return render(request,"store/add_goods.html")
 
 @loginValid
-def list_goods(request):
+def list_goods(request,state):
     """
     商品的列表页
     """
+    if state == "up":
+        state_num = 1
+    else:
+        state_num = 0
     # 获取两个关键字
     keywords = request.GET.get("keywords","") # 查询关键词，没有返回空
     page_num = request.GET.get("page_num",1) # 页码，默认为1
+    # 查询店铺
     store_id = request.COOKIES.get("has_store")
     store = Store.objects.get(id=int(store_id))
     if keywords: # 判断关键词是否存在
-        goods_list = store.goods_set.filter(goods_name__contains=keywords) # 完成了模糊查询
+        goods_list = store.goods_set.filter(goods_name__contains=keywords,goods_state=state_num) # 完成了模糊查询
     else: # 如果关键词不存在，查询所有
-        goods_list = store.goods_set.all()
+        goods_list = store.goods_set.filter(goods_state=state_num)
     # # 分页，每页3条
     paginator = Paginator(goods_list,3)
     page = paginator.page(int(page_num))
     page_range = paginator.page_range
     # 返回分页数据
-    return render(request, "store/goods_list.html", {"page":page, "page_range":page_range, "keywords":keywords})
+    return render(request, "store/goods_list.html", {"page":page, "page_range":page_range, "keywords":keywords,"state":state})
 # def list_goods(request):
 #     """
 #     商品的列表页
@@ -240,6 +240,22 @@ def update_goods(request,goods_id):
     return render(request, "store/update_goods.html", locals())
 
 
+def set_goods(request,state):
+    if state == "up":
+        state_num = 1
+    else:
+        state_num = 0
+    id = request.GET.get("id") #get获取id
+    referer = request.META.get("HTTP_REFERRE") #返回当前请求的来源地址
+    if id:
+        goods = Goods.objects.filter(id=id).first() #获取指定id的商品
+        if state == "delete":
+            goods.delete()
+        else:
+            goods.goods_state = state_num #修改状态
+            goods.save() #保存
+    return HttpResponseRedirect(referer) #跳转到请求来源页
+
 def base(request):
     return render(request,"store/base.html")
 # Create your views here.
@@ -260,4 +276,10 @@ def CookieTest(request):
 
     response = render(request,"store/Test.html",locals())
     response.set_cookie("valid","")
+    return response
+
+def logout(request):
+    response = HttpResponseRedirect("/Store/login/")
+    for key in request.COOKIES:
+        response.delete_cookie(key)
     return response

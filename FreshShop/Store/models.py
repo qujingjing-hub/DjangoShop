@@ -32,11 +32,11 @@ class Goods(models.Model):
     goods_name = models.CharField(max_length=32, verbose_name="商品名称")
     goods_price = models.FloatField(verbose_name="商品价格")
     goods_image = models.ImageField(upload_to="store/images", verbose_name="商品图片")
-    goods_number = models.IntegerField(max_length=32, verbose_name="商品数量库存")
+    goods_number = models.IntegerField(verbose_name="商品数量库存")
     goods_description = models.TextField(verbose_name="商品描述")
     goods_date = models.DateField(verbose_name="商品出厂日期")
     goods_safedate = models.IntegerField(verbose_name="保质期")
-
+    goods_state = models.IntegerField(verbose_name="商品状态",default=1) # 0 下架 1 代售
     store_id = models.ManyToManyField(to=Store,verbose_name="商品店铺")
 
 class GoodsImg(models.Model):
