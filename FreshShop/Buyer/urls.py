@@ -6,6 +6,10 @@ urlpatterns = [
     path('login/', login),
     path('logout/', logout),
     path('index/', index),
+    path('goods_list/', goods_list),
+    path('goods_detail/', goods_detail),
+    path('pay_order/', pay_order),
+    path('pay_result/', pay_result),
 ]
 urlpatterns += [
     path("base/", base),

@@ -4,7 +4,8 @@ from Buyer.models import *
 from django.http import JsonResponse
 from django.shortcuts import HttpResponseRedirect
 
-from Store.views import set_password
+from Store.views import *
+from alipay import AliPay
 
 def loginValid(fun):
     def inner(request,*args,**kwargs):
@@ -71,7 +72,105 @@ def logout(request):
 
 @loginValid
 def index(request):
-    return render(request,"buyer/index.html")
+    result_list = []
+    goods_type_list = GoodsType.objects.all()
+    for goods_type in goods_type_list:
+        goods_list = goods_type.goods_set.values()[:4]
+        if goods_list:
+            goodsType = {
+                "id":goods_type.id,
+                "name":goods_type.name,
+                "description":goods_type.description,
+                "picture":goods_type.picture,
+                "goods_list":goods_list
+            }
+            result_list.append(goodsType)
+    return render(request,"buyer/index.html",locals())
+
+@loginValid
+def goods_list(request):
+    """
+    前台列表页
+    :param reuqest:
+    :return:
+    """
+    goodsList = []
+    type_id = request.GET.get("type_id")
+    #获取类型
+    goods_type = GoodsType.objects.filter(id = type_id).first()
+    if goods_type:
+        # 查询所有上架的产品
+        goodsList = goods_type.goods_set.filter(goods_state = 1)
+    return render(request,"buyer/goods_list.html",locals())
+
+@loginValid
+def goods_detail(request):
+    goods = Goods.objects.all()
+    return render(request, "buyer/goods_detail.html",locals())
+
+def pay_order(request):
+    money = request.GET.get("money") #获取订单金额
+    order_id = request.GET.get("order_id") #获取订单id
+
+    alipay_public_key_string = """-----BEGIN PUBLIC KEY-----
+    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0bIed2r/KZXSKMahA1srQPlij5Wz6Sm7ro2T2PgD/iBMIIvph6vN2WMBtBzBpUehvK6+MuzELL92FSASEL+ypTLdDhlneo0519BCgOGCmuTBTxDCWHecdn28/ddbNXeFFOPGhbTieW3KcQu3FeJgxCyqxi0RLdPnFLQzy9c+JQPiWUlJDXLKrdO5bi1BD0po3El5gluFK57VOIAh5RdR5WQXw0ikjNAbH55/zjYM7jnJWAzJVUaw5W/DSVYMN8SCTaJC8BnVxwbrhkkR/Jj5ZrkHybUMnZXddD6UJNqQMX7SE+oLzsmHNnh1th6xUcYG+7OdjslAsVQFI6m6skyQsQIDAQAB
+    -----END PUBLIC KEY-----"""
+
+    app_private_key_string = """-----BEGIN RSA PRIVATE KEY-----
+    MIIEowIBAAKCAQEA0bIed2r/KZXSKMahA1srQPlij5Wz6Sm7ro2T2PgD/iBMIIvph6vN2WMBtBzBpUehvK6+MuzELL92FSASEL+ypTLdDhlneo0519BCgOGCmuTBTxDCWHecdn28/ddbNXeFFOPGhbTieW3KcQu3FeJgxCyqxi0RLdPnFLQzy9c+JQPiWUlJDXLKrdO5bi1BD0po3El5gluFK57VOIAh5RdR5WQXw0ikjNAbH55/zjYM7jnJWAzJVUaw5W/DSVYMN8SCTaJC8BnVxwbrhkkR/Jj5ZrkHybUMnZXddD6UJNqQMX7SE+oLzsmHNnh1th6xUcYG+7OdjslAsVQFI6m6skyQsQIDAQABAoIBADZ4jnF22dFzmaP99NVqWVIHdhLWUGXA8X/mRwGVa3QX766EqaUUe+R8U3T2A1drxBe/TKjt2AfHtGTIb+jp4v4GuGVxM/Ahv2TQNHZGHiceRRjEwbc5WutsvisyRf8djPRgNrGEy0+/tVaoNGb65ygOck4IZu4AnYZDSTEqOHpkj13VKtdqyXlKhOhyrBCsIpvi4t/EnrXSoHSW4rPBG6Zl+rGJL29+eD+Ct7nX3iFCrbtsBYfPefg9KP38fCuFWPfBgyLerb+LrHac9Ku8WlgS+H1GdWRAUH6Lx8On2AaN7eXOEcRkYndWDhmy9jmVGA41ESBbxcOSb2V9ONz1oAECgYEA9C+P17YUO+j4HRay3qk28IWe4QxYGUovSs6VYFSq3FIfVL+3tnGq2oIG7Y2cmU/69rc9LypWSIeO48kFqUPWClx+y6UeZUfVx0yzLHUjzNQBp3zcgHLiQxpCZv3OUEtbusyyQUj53gQEd7fB6ydhanhO+oSuoPqx1KjEd1VVzHkCgYEA29de2JxWXSTMPUJuhut8kEcvbRzgzDRsUYX0/gkl+NSwDbpdbUDzknNSaOusVtlr1JTf8uReGF75ZVlBE28YvzQb1/LlDeB+b0IbBShnm+ewY+fPH7wt/2vYePNTDSf46zEkq3K2DdU2UQE70BUMxGdJN+PlHkeXzILi4cQ0Z/kCgYB3WFOma2CCU4AIv5JWzz+B2NzpQ14/pgltN4C8n0UO/7g+dKF2syF9QHXgXwk9yWBweuiVh8y6ED8fR53Tt8sCL2jtYVt0xuJOUUd1IB+KOchBMv6WbQ/3GfuAWOYgSmSf7PHmhKNTBoWkeZR2uT2ciwaW3Ih5N2348S9s37FaiQKBgQCq4ggpm6xODpJrc73yRg23IH4u9GmQkZc470V2Saoodzq6EQkaKYirZ9TBFaAKikqVHXvOk9DIZNq6+tvovUyhI2IZRAbj+IKO/PV/1t5ig3/KyJ9pbZ7bkfrcWVdPPKjyOGrmke4NZpQn9yuFHTelWxvAw/aOyNun7n1pPFf4EQKBgFic3x8hJ0VPJtQkKsNAODdT7DNBhx4OQ65A3+V3imMV1SUUNmq12jmFdS2lv2n33k4feEg7+xJa5263oedYXZ5GaiLhTwEyv/nWPuMPkFuibaxppgj8/MkX9AjNsum0s7dxmWNHFQPVS71gOsTCWSKrnhP9CJCwBKyZM9EEaQzL
+    -----END RSA PRIVATE KEY-----"""
+
+    # 实例化支付应用
+    alipay = AliPay(
+        appid="2016101000652490",
+        app_notify_url=None,
+        app_private_key_string=app_private_key_string,
+        alipay_public_key_string=alipay_public_key_string,
+        sign_type="RSA2"
+    )
+
+    # 发起支付请求
+    order_string = alipay.api_alipay_trade_page_pay(
+        out_trade_no=order_id,  # 订单号
+        total_amount=str(money),  # 支付金额
+        subject="生鲜交易",  # 交易主题
+        return_url="http://127.0.0.1:8000/Buyer/pay_result/",
+        notify_url="http://127.0.0.1:8000/Buyer/pay_result"
+    )
+
+    return HttpResponseRedirect("https://openapi.alipaydev.com/gateway.do?" + order_string)
+
+@loginValid
+def pay_result(request):
+    """
+        支付宝支付成功自动用get请求返回的参数
+        #编码
+        charset=utf-8
+        #订单号
+        out_trade_no=10002
+        #订单类型
+        method=alipay.trade.page.pay.return
+        #订单金额
+        total_amount=1000.00
+        #校验值
+        sign=enBOqQsaL641Ssf%2FcIpVMycJTiDaKdE8bx8tH6shBDagaNxNfKvv5iD737ElbRICu1Ox9OuwjR5J92k0x8Xr3mSFYVJG1DiQk3DBOlzIbRG1jpVbAEavrgePBJ2UfQuIlyvAY1fu%2FmdKnCaPtqJLsCFQOWGbPcPRuez4FW0lavIN3UEoNGhL%2BHsBGH5mGFBY7DYllS2kOO5FQvE3XjkD26z1pzWoeZIbz6ZgLtyjz3HRszo%2BQFQmHMX%2BM4EWmyfQD1ZFtZVdDEXhT%2Fy63OZN0%2FoZtYHIpSUF2W0FUi7qDrzfM3y%2B%2BpunFIlNvl49eVjwsiqKF51GJBhMWVXPymjM%2Fg%3D%3D&trade_no=2019072622001422161000050134&auth_app_id=2016093000628355&version=1.0&app_id=2016093000628355
+        #订单号
+        trade_no=2019072622001422161000050134
+        #用户的应用id
+        auth_app_id=2016093000628355
+        #版本
+        version=1.0
+        #商家的应用id
+        app_id=2016093000628355
+        #加密方式
+        sign_type=RSA2
+        #商家id
+        seller_id=2088102177891440
+        #时间
+        timestamp=2019-07-26
+        """
+    return render(request,"buyer/pay_result.html",locals())
+
 
 # Create your views here.
 def base(request):

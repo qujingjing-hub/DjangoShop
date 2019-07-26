@@ -152,6 +152,7 @@ def goods_type_list(request):
     page_range = paginator.page_range
     return render(request,"store/goods_type_list.html",locals())
 
+@loginValid
 def delete_goods_type(request):
     id = int(request.GET.get("id"))
     goods = GoodsType.objects.get(id=id)
@@ -168,6 +169,7 @@ def add_goods(request):
     """
     负责添加商品
     """
+    goods_type_list = GoodsType.objects.all()
     if request.method == "POST":
         # 获取post请求
         goods_name = request.POST.get("goods_name")
@@ -176,8 +178,12 @@ def add_goods(request):
         goods_description = request.POST.get("goods_description")
         goods_date = request.POST.get("goods_date")
         goods_safedate = request.POST.get("goods_safedate")
+
+        goods_type = request.POST.get("goods_type")
+
         goods_store = request.POST.get("goods_store")
         goods_image = request.FILES.get("goods_image")
+
 
         # 开始保存数据
         goods = Goods()
@@ -188,6 +194,7 @@ def add_goods(request):
         goods.goods_date = goods_date
         goods.goods_safedate = goods_safedate
         goods.goods_image = goods_image
+        goods.goods_type = GoodsType.objects.get(id=int(goods_type))
         goods.save()
 
         # 保存多对多数据
@@ -195,8 +202,8 @@ def add_goods(request):
             Store.objects.get(id=int(goods_store))
         )
         goods.save()
-        return HttpResponseRedirect("/Store/list_goods/")
-    return render(request,"store/add_goods.html")
+        return HttpResponseRedirect("/Store/list_goods/up")
+    return render(request,"store/add_goods.html",locals())
 
 
 @loginValid
@@ -257,6 +264,7 @@ def list_goods(request,state):
 @loginValid
 def goods(request,goods_id):
     goods_data = Goods.objects.filter(id=goods_id).first()
+
     return render(request, "store/goods.html",locals())
 
 @loginValid
