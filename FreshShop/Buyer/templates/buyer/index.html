@@ -54,7 +54,7 @@
 			<ul class="goods_list fl">
                 {% for goods in goods_type.goods_list %}
 				<li>
-					<h4><a href="/Buyer/goods_detail/">{{ goods.goods_name }}</a></h4>
+					<h4><a href="/Buyer/goods_detail/?id={{ goods.id }}">{{ goods.goods_name }}</a></h4>
 					<a href="#"><img src="/static/{{ goods.goods_image }}"></a>
 					<div class="prize">{{ goods.goods_price }}</div>
 				</li>

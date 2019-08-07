@@ -1,10 +1,10 @@
 import hashlib
-
 from django.shortcuts import render
 from django.core.paginator import Paginator
 from django.shortcuts import HttpResponseRedirect
 
 from Store.models import *
+from Buyer.models import *
 
 def loginValid(fun):
     def inner(request,*args,**kwargs):
@@ -195,12 +195,11 @@ def add_goods(request):
         goods.goods_safedate = goods_safedate
         goods.goods_image = goods_image
         goods.goods_type = GoodsType.objects.get(id=int(goods_type))
+        goods.store_id = Store.objects.get(id=int(goods_store))
         goods.save()
 
         # 保存多对多数据
-        goods.store_id.add(
-            Store.objects.get(id=int(goods_store))
-        )
+
         goods.save()
         return HttpResponseRedirect("/Store/list_goods/up")
     return render(request,"store/add_goods.html",locals())
@@ -310,6 +309,11 @@ def set_goods(request,state):
             goods.goods_state = state_num #修改状态
             goods.save() #保存
     return HttpResponseRedirect(referer) #跳转到请求来源页
+
+def order_list(request):
+    store_id = request.COOKIES.get("has_store")
+    order_list = OrderDetail.objects.filter(order_id__order_status=2,goods_store=store_id)
+    return render(request,"store/order_list.html",locals())
 
 def base(request):
     return render(request,"store/base.html")

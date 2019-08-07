@@ -17,6 +17,7 @@ urlpatterns = [
     re_path(r'^goods/(?P<goods_id>\d+)', goods),
     re_path(r'update_goods/(?P<goods_id>\d+)', update_goods),
     re_path(r'set_goods/(?P<state>\w+)', set_goods),
+    path('order_list/',order_list),
 
 ]
 urlpatterns += [

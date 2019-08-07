@@ -46,7 +46,7 @@ class Goods(models.Model):
     goods_state = models.IntegerField(verbose_name="商品状态",default=1) # 0 下架 1 代售
 
     goods_type = models.ForeignKey(to=GoodsType,on_delete=models.CASCADE,verbose_name="商品类型")
-    store_id = models.ManyToManyField(to=Store,verbose_name="商品店铺")
+    store_id = models.ForeignKey(to=Store,on_delete=models.CASCADE,verbose_name="商品店铺")
 
 class GoodsImg(models.Model):
 
